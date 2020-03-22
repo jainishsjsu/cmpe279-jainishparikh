@@ -23,8 +23,9 @@ int main(int argc, char const *argv[])
     } 
        
     // Forcefully attaching socket to the port 8080 
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
-                                                  &opt, sizeof(opt))) 
+    //if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
+    //                                              &opt, sizeof(opt))) 
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR , &opt, sizeof(opt)))
     { 
         perror("setsockopt"); 
         exit(EXIT_FAILURE); 
@@ -51,9 +52,35 @@ int main(int argc, char const *argv[])
         perror("accept"); 
         exit(EXIT_FAILURE); 
     } 
-    valread = read( new_socket , buffer, 1024); 
-    printf("%s\n",buffer ); 
-    send(new_socket , hello , strlen(hello) , 0 ); 
-    printf("Hello message sent\n"); 
+    
+    // printf("Current process id before fork: %d \n",getpid());
+    // printf("Current user id before fork: %d \n",getuid());
+    int p_id = fork();
+    // printf("Current process id after fork: %d \n",getpid());
+    
+    if (p_id == 0){
+        // printf("In child process: %d \n",getpid());
+        int userid = setuid(65534);
+        if(userid == -1){
+            printf("Error changing user id");
+            exit(EXIT_FAILURE);
+        }
+        valread = read( new_socket , buffer, 1024); 
+        printf("%s\n",buffer ); 
+    
+    }else if(p_id > 0){
+        wait(NULL);
+        // printf("In parent process\n");
+        send(new_socket , hello , strlen(hello) , 0 ); 
+        printf("Hello message sent\n"); 
+    
+    }else{
+        printf("Error in forking the process");
+    }
+
+    // printf("Current process id: %d \n",getpid());
+    // printf("Current user id: %d \n",getuid());
+    
+    
     return 0; 
 } 
