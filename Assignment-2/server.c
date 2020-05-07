@@ -53,22 +53,18 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // printf("Current process id before fork: %d \n",getpid());
-    // printf("Current user id before fork: %d \n",getuid());
     int p_id = fork();
-    // printf("Current process id after fork: %d \n",getpid());
 
     if (p_id == 0)
     {
-        // printf("In child process: %d \n",getpid());
-        int userid = setuid(65534);
-        if (userid == -1)
+        char *myargs[] = {"child", &new_socket, NULL};
+        char *myenv[] = {NULL};
+
+        if (execve("child", myargs, myenv) < 0)
         {
-            printf("Error changing user id");
+            printf("Error in execve");
             exit(EXIT_FAILURE);
         }
-        valread = read(new_socket, buffer, 1024);
-        printf("%s\n", buffer);
     }
     else if (p_id > 0)
     {
